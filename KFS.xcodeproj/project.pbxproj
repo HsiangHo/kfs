@@ -374,6 +374,7 @@
 				GCC_PREFIX_HEADER = Source/KFS.pch;
 				INFOPLIST_FILE = Info/KFS.plist;
 				PRODUCT_NAME = KFS;
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -387,6 +388,7 @@
 				GCC_PREFIX_HEADER = Source/KFS.pch;
 				INFOPLIST_FILE = Info/KFS.plist;
 				PRODUCT_NAME = KFS;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};
