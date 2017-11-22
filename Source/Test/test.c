@@ -47,8 +47,8 @@ const char *test_backingpath(const char *path, test_context_t *context) {
 	return result;
 }
 
-bool test_statfs(const char *path, kfsstatfs_t *result, void *context);
-bool test_statfs(const char *path, kfsstatfs_t *result, void *context) {
+bool test_statfs(const char *path, kfsstatfs_t *result, int *error, void *context);
+bool test_statfs(const char *path, kfsstatfs_t *result, int *error, void *context) {
 	bool success = false;
 	struct statfs sbuf;
 	if (statfs(test_backingpath(path, context), &sbuf) == 0) {
@@ -59,8 +59,8 @@ bool test_statfs(const char *path, kfsstatfs_t *result, void *context) {
 	return success;
 }
 
-bool test_stat(const char *path, kfsstat_t *result, void *context);
-bool test_stat(const char *path, kfsstat_t *result, void *context) {
+bool test_stat(const char *path, kfsstat_t *result, int *error, void *context);
+bool test_stat(const char *path, kfsstat_t *result, int *error, void *context) {
 	bool success = false;
 	struct stat sbuf;
 	if (lstat(test_backingpath(path, context), &sbuf) == 0) {
@@ -95,8 +95,8 @@ bool test_stat(const char *path, kfsstat_t *result, void *context) {
 	return success;
 }
 
-ssize_t test_read(const char *path, char *buf, size_t offset, size_t length, void *context);
-ssize_t test_read(const char *path, char *buf, size_t offset, size_t length, void *context) {
+long test_read(const char *path, char *buf, unsigned long offset, unsigned long length, int* error, void *context);
+long test_read(const char *path, char *buf, unsigned long offset, unsigned long length, int* error, void *context){
 	ssize_t result = -1;
 	int fd = open(test_backingpath(path, context), O_RDONLY);
 	if (fd >= 0) {
@@ -107,8 +107,8 @@ ssize_t test_read(const char *path, char *buf, size_t offset, size_t length, voi
 	return result;
 }
 
-ssize_t test_write(const char *path, const char *buf, size_t offset, size_t length, void *context);
-ssize_t test_write(const char *path, const char *buf, size_t offset, size_t length, void *context) {
+long test_write(const char *path, const char *buf, unsigned long offset, unsigned long length, int* error, void *context);
+long test_write(const char *path, const char *buf, unsigned long offset, unsigned long length, int* error, void *context)  {
 	ssize_t result = -1;
 	int fd = open(test_backingpath(path, context), O_WRONLY);
 	if (fd >= 0) {
@@ -119,15 +119,15 @@ ssize_t test_write(const char *path, const char *buf, size_t offset, size_t leng
 	return result;
 }
 
-bool test_symlink(const char *path, const char *value, void *context);
-bool test_symlink(const char *path, const char *value, void *context) {
+bool test_symlink(const char *path, const char *value, int* error, void *context);
+bool test_symlink(const char *path, const char *value, int* error, void *context){
 	return symlink(value, test_backingpath(path, context)) == 0;
 }
 
-bool test_readlink(const char *path, char **value, void *context);
-bool test_readlink(const char *path, char **value, void *context) {
+bool test_readlink(const char *path, char **value, int *error, void *context);
+bool test_readlink(const char *path, char **value, int *error, void *context) {
 	bool success = false;
-	char *result = malloc(sizeof(char) * PATH_MAX);
+	char *result = (char *)malloc(sizeof(char) * PATH_MAX);
 	ssize_t length = readlink(test_backingpath(path, context), result, PATH_MAX);
 	if (length >= 0 && length < PATH_MAX) {
 		result[length] = '\0';
@@ -137,8 +137,8 @@ bool test_readlink(const char *path, char **value, void *context) {
 	return success;
 }
 
-bool test_create(const char *path, void *context);
-bool test_create(const char *path, void *context) {
+bool test_create(const char *path, int *error, void *context);
+bool test_create(const char *path, int *error, void *context) {
 	bool success = false;
 	int fd = open(test_backingpath(path, context), O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	if (fd >= 0) {
@@ -148,13 +148,13 @@ bool test_create(const char *path, void *context) {
 	return success;
 }
 
-bool test_remove(const char *path, void *context);
-bool test_remove(const char *path, void *context) {
+bool test_remove(const char *path, int *error, void *context);
+bool test_remove(const char *path, int *error, void *context) {
 	return unlink(test_backingpath(path, context)) == 0;
 }
 
-bool test_rename(const char *path, const char *new_path, void *context);
-bool test_rename(const char *path, const char *new_path, void *context) {
+bool test_rename(const char *path, const char *new_path, int *error, void *context);
+bool test_rename(const char *path, const char *new_path, int *error, void *context) {
 	// need to dup the to path since test backing stores value in a static buffer
 	char *to = strdup(test_backingpath(new_path, context));
 	int result = rename(test_backingpath(path, context), to);
@@ -162,13 +162,13 @@ bool test_rename(const char *path, const char *new_path, void *context) {
 	return result == 0;
 }
 
-bool test_truncate(const char *path, uint64_t size, void *context);
-bool test_truncate(const char *path, uint64_t size, void *context) {
+bool test_truncate(const char *path, uint64_t size, int *error, void *context);
+bool test_truncate(const char *path, uint64_t size, int *error, void *context) {
 	return truncate(test_backingpath(path, context), size) == 0;
 }
 
-bool test_chmod(const char *path, kfsmode_t mode, void *context);
-bool test_chmod(const char *path, kfsmode_t mode, void *context) {
+bool test_chmod(const char *path, kfsmode_t mode, int *error, void *context);
+bool test_chmod(const char *path, kfsmode_t mode, int *error, void *context) {
 	mode_t set = 0;
 	if (mode & KFS_IRUSR) { set |= S_IRUSR; }
 	if (mode & KFS_IWUSR) { set |= S_IWUSR; }
@@ -182,8 +182,8 @@ bool test_chmod(const char *path, kfsmode_t mode, void *context) {
 	return chmod(test_backingpath(path, context), set) == 0;
 }
 
-bool test_utimes(const char *path, const kfstime_t *atime, const kfstime_t *mtime, void *context);
-bool test_utimes(const char *path, const kfstime_t *atime, const kfstime_t *mtime, void *context) {
+bool test_utimes(const char *path, const kfstime_t *atime, const kfstime_t *mtime, int *error, void *context);
+bool test_utimes(const char *path, const kfstime_t *atime, const kfstime_t *mtime, int *error, void *context) {
 	struct timeval times[2];
 	gettimeofday(&times[0], NULL);
 	gettimeofday(&times[1], NULL);
@@ -198,18 +198,18 @@ bool test_utimes(const char *path, const kfstime_t *atime, const kfstime_t *mtim
 	return utimes(test_backingpath(path, context), times) == 0;
 }
 
-bool test_mkdir(const char *path, void *context);
-bool test_mkdir(const char *path, void *context) {
+bool test_mkdir(const char *path, int *error, void *context);
+bool test_mkdir(const char *path, int *error, void *context) {
 	return mkdir(test_backingpath(path, context), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) == 0;
 }
 
-bool test_rmdir(const char *path, void *context);
-bool test_rmdir(const char *path, void *context) {
+bool test_rmdir(const char *path, int *error, void *context);
+bool test_rmdir(const char *path, int *error, void *context) {
 	return rmdir(test_backingpath(path, context)) == 0;
 }
 
-bool test_readdir(const char *path, kfscontents_t *contents, void *context);
-bool test_readdir(const char *path, kfscontents_t *contents, void *context) {
+bool test_readdir(const char *path, kfscontents_t *contents, int *error, void *context);
+bool test_readdir(const char *path, kfscontents_t *contents, int *error, void *context) {
 	bool success = false;
 	DIR *dir = opendir(test_backingpath(path, context));
 	if (dir) {
@@ -342,7 +342,7 @@ int runtests(void) {
 	cmdassert_match("mkdir /tmp/kfstest/mount/dir", "File exists", "create dup directory");
 	cmdassert_match("ls    /tmp/kfstest/mount", "dir", "directory entry not created");
 	cmdassert_empty("echo hello world > /tmp/kfstest/mount/dir/file", "create file in dir");
-	cmdassert_match("rmdir /tmp/kfstest/mount/dir", "Directory not empty", "remove dir with contents (not allowed)");
+    cmdassert_match("rmdir /tmp/kfstest/mount/dir", "Directory not empty", "remove dir with contents (not allowed)");
 	cmdassert_empty("rm -r /tmp/kfstest/mount/dir", "recursive remove dir with contents");
 	cmdassert_match("rmdir /tmp/kfstest/mount/dir", "No such file or directory", "remove missing dir");
 	
